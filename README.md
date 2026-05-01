@@ -1,164 +1,30 @@
-# LearnAgent
+# LearnAgent 
+*开发中的agent框架学习项目*
 
-> 一个基于 OpenAI SDK 的智能 Agent 框架，具备双重记忆系统与 Condition Flow 复杂任务处理引擎。
+## V0.1版本说明
+本项目为个人学习、开发的Agent项目，欢迎讨论。当前版本基于OpenAI SDK和ChromaDB进行开发。
+LearnAgent是一个agent框架，接入OpenAI兼容的模型即可使用。LearnAgent具有调用工具、自动强弱模型选择、调用log记录等基础agent功能外，还有通过RAG和用户画像机制实现的双重记忆功能，可以通过刻画用户画像和出发历史记录搜索来提供更加个性化、一体化的回应。另外针对agent使用场景中的复杂任务，我设计了一个*Condition Flow*模式，专门用来通过提取问题、分析问题、制定规划、分步处理的循环来将复杂问题逐步拆解并尝试解决。
 
-[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-Developing-orange.svg)](https://github.com/wsn18381187/LearnAgent)
+*目前在更新用户画像这一步，我尝试了很多prompt，但是LLM还是会控制不住超出prompt中设定的用户事实、最近聊天总结等内容的上限。目前通过程序截断的方式来强行确保实现目标*
+*搜索功能使用的是Tavily的API，想使用的话可以去官网注册一个账号，免费版一个月有1000次使用*
 
----
-
-## 架构概览
-
-```
-┌─────────────────────────────────────────────────────┐
-│                     main.py                          │
-│               (入口 & 对话循环)                        │
-└──────────┬────────────────────────────┬──────────────┘
-           │                            │
-    简单任务                            复杂任务
-           │                            │
-           ▼                            ▼
-┌──────────────────┐    ┌──────────────────────────────┐
-│  judge_which_model │    │     Condition Flow 引擎       │
-│  (强弱模型自动切换)  │    │  Plan → Execute → Judge →    │
-│  + 工具调用        │    │  Conclude (循环至满足条件)     │
-└──────┬───────────┘    └──────────────┬───────────────┘
-       │                               │
-       └───────────┬───────────────────┘
-                   ▼
-┌─────────────────────────────────────────────────────┐
-│                   双重记忆系统                         │
-│  ┌──────────────┐        ┌──────────────────────┐   │
-│  │  用户画像      │        │  ChromaDB RAG 向量库  │   │
-│  │  (一级记忆)    │        │  (二级记忆)           │   │
-│  │  偏好/事实/    │        │  历史对话嵌入 & 检索   │   │
-│  │  最近对话总结  │        │  滑动窗口自动更新      │   │
-│  └──────────────┘        └──────────────────────┘   │
-└─────────────────────────────────────────────────────┘
-```
-
----
-
-## 核心特性
-
-### 🔄 Condition Flow — 复杂任务处理引擎
-
-针对需要多步推理的复杂任务，Condition Flow 采用 **Plan → Execute → Judge → Conclude** 循环架构：
-
-1. **Plan（规划）**：分析任务背景与目标，拆分为多个子任务
-2. **Execute（执行）**：顺序执行每个子任务，仅传递执行结果而非完整过程
-3. **Judge（判断）**：评估当前结果是否满足预期，决定继续或退出
-4. **Conclude（总结）**：汇总所有步骤结果，输出最终报告
-
-> 相比直接多步推理，Condition Flow 在保留关键信息的同时避免上下文膨胀，适合复杂任务场景。
-
-### 🧠 双重记忆系统
-
-| 层级 | 实现 | 功能 |
-|------|------|------|
-| 一级记忆 | 用户画像 (`user_image.json`) | 记录用户基本信息、偏好、事实、最近对话总结 |
-| 二级记忆 | ChromaDB RAG 向量库 | 历史对话嵌入存储，按需检索相关内容 |
-
-- 每次对话结束后自动更新用户画像
-- 滑动窗口机制将对话片段嵌入 ChromaDB，实现长期记忆检索
-
-### 🛠 CodeAct 模式
-
-文件写入统一走 CodeAct 模式：LLM 生成 Python 代码直接执行文件写入，彻底规避 JSON function call 中的字符转义问题。
-
-### ⚡ 自动强弱模型切换
-
-根据任务复杂度自动选择合适的模型：
-- **简单任务** → 弱模型（快速响应，节省成本）
-- **复杂任务** → 强模型（深度推理）
-
-### 🔧 内置工具集
-
-| 工具 | 功能 |
-|------|------|
-| `search_web` | 联网搜索（Tavily API） |
-| `read_file` | 读取本地文件 |
-| `write_file` | CodeAct 模式写入文件 |
-| `execute_terminal_command` | 执行终端命令 |
-| `rag_history_search` | 检索历史对话 |
-| `get_current_time` | 获取当前时间 |
-| `ask_user_more_info` | 向用户追问 |
-
----
-
-## 项目结构
-
-```
-LearnAgent/
-├── LearnAgent.md              # 详细设计文档
-├── README.md                  # 本文件
-├── requirement.txt            # Python 依赖
-├── .gitignore                 # Git 忽略规则
-├── chromadbtest/              # ChromaDB 集成测试
-│   └── chromadbtest.py
-└── code-v0_1/                 # 核心代码
-    ├── main.py                # 入口 & 对话循环
-    ├── .env                   # API 密钥（不纳入版本控制）
-    ├── core/                  # 核心引擎
-    │   ├── condition_flow.py           # Condition Flow 主循环
-    │   ├── condition_flow_definiton.py # Flow 各阶段 Prompt 定义
-    │   ├── flow_entrance.py            # Flow 入口 & 工具解析
-    │   ├── flow_functions.py           # Plan/Execute/Judge/Conclude 实现
-    │   └── code_act_executor.py        # CodeAct 代码执行器
-    ├── functions/             # 功能模块
-    │   ├── judge_which_model.py        # 强弱模型路由
-    │   ├── get_model_response.py       # 模型调用封装
-    │   ├── use_tools_to_analyze.py     # 工具调用解析
-    │   ├── choose_which_tools.py       # 工具注册 & 选择
-    │   ├── auto_configuration.py       # 模型配置
-    │   ├── user_image.py               # 用户画像管理
-    │   ├── rag_by_chromadb.py          # RAG 检索
-    │   ├── auto_history_embedding.py   # 历史对话自动嵌入
-    │   └── get_embedding.py            # Embedding 模型
-    ├── tools/                 # 工具实现
-    │   ├── search_web.py
-    │   ├── read_file.py
-    │   ├── write_file.py
-    │   ├── terminal_command.py
-    │   ├── rag_history_search.py
-    │   ├── get_current_time.py
-    │   └── ask_user_more_info.py
-    ├── history/               # 对话历史（不纳入版本控制）
-    ├── log/                   # 请求日志（不纳入版本控制）
-    ├── chromaDB/              # 向量数据库（不纳入版本控制）
-    └── user_info/             # 用户画像数据（不纳入版本控制）
-```
-
----
-
-## 快速启动
-
-### 1. 环境配置
-
+### 快速启动
+**创建环境**
 ```bash
 conda create -n la python==3.10
 conda activate la
 pip install openai python-dotenv chromadb
 ```
+然后cd至LearnAgent/code-v0_1所在的文件路径
 
-### 2. API 配置
+**配置API**
++ 在当前工作目录下创建一个.env文件用来管理你的所有API KEY，包括调用模型的API KEY和搜索API KEY
++ 在`functions/auto_configuration.py`中设定好Base URL，模型名称和其它参数，可以设置强模型和弱模型搭配使用
++ 在`functions/get_embedding.py`中，选择好你想使用的embedding模型，并且确定之后不要更改，这是实现RAG向量库的embedding核心，不想改的话用我的同款模型也可以，不过需要一个OpenRouter API-KEY。其实这种小模型本地部署也行。
 
-在 `code-v0_1/` 目录下创建 `.env` 文件：
+**用户画像**
 
-```env
-OPENAI_API_KEY=your_api_key_here
-TAVILY_API_KEY=your_tavily_key_here
-```
-
-在 `functions/auto_configuration.py` 中配置模型 Base URL、模型名称等参数，支持强弱模型搭配。
-
-在 `functions/get_embedding.py` 中配置 Embedding 模型（确定后不要更改，否则向量库需重建）。
-
-### 3. 用户画像初始化
-
-在 `code-v0_1/` 下创建 `user_info/user_image.json`：
-
+直接复制下面的内容，创建一个`user_info`文件夹，在此文件夹下创建一个`user_image.json`并粘贴即可
 ```json
 {
   "basic_info": {},
@@ -169,71 +35,33 @@ TAVILY_API_KEY=your_tavily_key_here
 }
 ```
 
-### 4. 启动
-
-```bash
-cd code-v0_1
+# 启动程序
+```python
 python main.py
 ```
+输入clear更新对话session
+输入exit退出对话
 
----
 
-## 技术栈
-
-- **语言**：Python 3.10+
-- **模型调用**：OpenAI SDK（兼容 DeepSeek、OpenRouter 等）
-- **向量数据库**：ChromaDB
-- **搜索**：Tavily Search API
-- **依赖**：`openai`, `python-dotenv`, `chromadb`
-
----
 
 ## 开发日志
+*前几天的忘记写了，先总结一下*
 
-<details>
-<summary><b>4.27 — 双重记忆系统</b></summary>
+已经完成基本的agent多轮对话框架，具有多模型自动切换、多种工具调用（联网搜索、执行基本终端指令、时间获取、询问用户）、多轮对话自动保存、用户画像提取与自动更新、模型调用log记录功能
 
-- 扩展用户画像功能，新增最近对话内容记录，构成一级记忆
-- 基于 ChromaDB 构建 RAG 向量库，实现二级记忆系统
-- 封装 RAG 检索 Tool 和滑动窗口自动嵌入机制
-- 实现既能快速响应最近事件，又能动态检索历史信息
+**4.27**
++ 拓展了用户画像功能，不仅记录用户的基本信息、行为特点和偏好等，还记录最近的对话内容，用来给模型提供最近对话内容的参考，构成历史对话内容的一级记忆
++ 使用基于chromaDB开发的RAG向量库构成第二级记忆系统。chromaDB会根据特定id、向量、文本构成的基本数据单元进行管理，并提供了很方便的初始化、存储管理、向量搜索功能。其中将文本转换为向量我使用了OpenAI SDK格式调用的embedding模型。然后我封装了两个函数，一个是给LLM的tool，调用的时候会根据询问的内容进行embedding然后去数据库中找聊天记录，返回的聊天记录还会被小模型处理一次进行消息提炼；另一个是在每次对话结束之后，当对话历史文件保存好了，以滑动窗口的形式对短片的聊天记录进行embedding然后更新到数据库中。
++ 通过这个二级记忆系统，LearnAgent实现了既能快速响应最近的事件，又能在需要更多信息的时候动态地从数据库中找相关信息
 
-</details>
+**4.28**
++ 由于梁圣牛逼，我决定将基座模型切换为deepseek-v4-flash和deepseek-v4-pro。但由于deepseek会把reasoning的内容单独放到返回体中的某一个位置，为了兼容性起见，我先给请求模型的函数添加一个extra_body用来开启deepseek的非思考模式，以后再扩展一下怎么记录这个reasoning。此外deepseek官网的API返回的template中不包含cost。虽然OpenAI SDK已经给出了很通用的接口，但不同的模型返回的格式仍然存在不小差异，尤其是各家的器件模型。后续开发可能考虑细化get_model_response，根据不同的平台/模型自动配置多轮对话/log记录的机制
++ 添加了文件读取工具。其实之前的终端功能就能进行简单的文件读取了，但是对于更多格式的文件难以实现读写，所以有必要开发专门的文件读取工具。目前仅开发了常见文件的读取功能，后续会拓展对于超长文件的自动识别、RAG压缩功能使其更加通用。哦对了，这个tool目前是由LearnAgent自行完成的。
++ 构思了一下agent的核心状态机，当Router判断当前任务非常复杂需要进行规划然后分步骤进行时，就会进入状态机工作流，进入“任务分析-分布规划-执行子任务-汇总结果并验收”的循环，每一轮循环后会单独判断结果，满足需求后退出循环
 
-<details>
-<summary><b>4.28 — 模型切换 & 文件工具</b></summary>
+**4.30**
++ 设计了LearnAgent的核心功能：*Condition Flow*。这个功能是用来处理复杂任务的一套信息流模式。与直接输出处理方案不同，进入Condition Flow模式之后，首先会分析当前的任务背景、条件、目标，然后将整个任务拆分为几个子任务，每个子任务有各自的条件和输入输出要求。顺序执行完子任务之后，会对当前的执行结果进行判断，如果符合预期结果则进行总结并输出，如果不符合则进一步进行任务分析、划分。这种处理方式相对于直接进行多步思考的区别是，Condition Flow过程中只会传递每一步的执行结果，而不会传递每一步的完整执行过程。由于任务经过划分进行多步处理，这样的处理方式可以在保留关键目标信息的同时使上下文不太臃肿，适合复杂任务的处理场景
 
-- 基座模型切换为 DeepSeek V4（Flash + Pro），处理 reasoning 兼容性
-- 添加文件读取工具，支持常见代码和标记格式
-- 构思 Agent 核心状态机：任务分析 → 分步规划 → 执行子任务 → 汇总验收
-
-</details>
-
-<details>
-<summary><b>4.30 — Condition Flow 设计</b></summary>
-
-- 设计并实现 Condition Flow 核心功能
-- Plan → Execute → Judge → Conclude 循环架构
-- 每步仅传递执行结果，避免上下文膨胀
-
-</details>
-
-<details>
-<summary><b>5.1 — 稳定性 & CodeAct</b></summary>
-
-- 修复大量模型返回异常 bug，增加容错机制（JSON 解析失败重试、连续失败计数等）
-- 实现 CodeAct 模式：文件写入统一走 Python 代码执行，彻底规避 JSON 转义问题
-- 修复 flow_entrance 参数名遮蔽、parse_json_list 异常未捕获等多个严重 bug
-- Condition Flow 成功通过武汉天气分析、日元上涨分析、科技公司产品页面生成等多项测试
-
-</details>
-
----
-
-## License
-
-MIT License. 详见 [LICENSE](LICENSE) 文件。
-
----
-
-*Made with ❤️ by [wsn18381187](https://github.com/wsn18381187)*
+**5.1**
++ 修复了大量模型返回时触发异常的bug，增加了很多容错机制，确保报错有迹可循的情况下整体不会因为某一次调用失败直接卡住。
++ 发现agent在执行复杂文件写入的功能时，如果直接通过tool调用的话，处于输出格式的要求，会多套一层字符转义，导致LLM很容易输出出错。因此参考主流agent的方法，使用CodeAct模式，让LLM直接搭建写入文件的python脚本，然后将要写入的内容放在python代码中的三引号内，这样就不需要转义，只需要规定好LLM可以使用的python函数后执行该python即可实现写入功能

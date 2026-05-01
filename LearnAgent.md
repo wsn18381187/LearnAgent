@@ -35,6 +35,13 @@ pip install openai python-dotenv chromadb
 }
 ```
 
+# 启动程序
+```python
+python main.py
+```
+输入clear更新对话session
+输入exit退出对话
+
 ## 开发前的构想
 ### 功能设计
 
