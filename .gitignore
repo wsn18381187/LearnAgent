@@ -1,0 +1,26 @@
+# 环境变量文件（含API密钥等敏感信息）
+code-v0_1/.env
+
+# ChromaDB 向量数据库（二进制数据，无需版本控制）
+code-v0_1/chromaDB/
+
+# 聊天历史记录（私人数据）
+code-v0_1/history/
+
+# 模型请求日志
+code-v0_1/log/
+
+# 用户画像数据（私人数据）
+code-v0_1/user_info/
+
+# Python 缓存文件
+__pycache__/
+*.pyc
+*.pyo
+
+# macOS 系统文件
+.DS_Store
+
+# IDE 配置
+.vscode/
+.idea/
