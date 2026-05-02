@@ -35,7 +35,7 @@ pip install openai python-dotenv chromadb
 }
 ```
 
-# 启动程序
+**启动程序**
 ```python
 python main.py
 ```
