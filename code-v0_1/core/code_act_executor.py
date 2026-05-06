@@ -114,8 +114,8 @@ The following functions are pre-imported and ready to use:
   read_file(file_path: str) -> str
       Read content from a file. Returns the file content or an error message.
 
-  execute_terminal_command(command: str) -> str
-      Execute a shell command. Returns stdout, stderr, and return code.
+  execute_terminal_command(command: str, background: bool = False) -> str
+      Execute a shell command. Set background=True for long-running tasks (training, downloads) to run in background and return immediately with PID and log path. Default is synchronous with 30s timeout.
 
   search_web(query: str) -> str
       Search the web for up-to-date information.

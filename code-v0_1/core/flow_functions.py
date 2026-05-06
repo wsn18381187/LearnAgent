@@ -1,5 +1,5 @@
 from functions.get_model_response import get_model_response
-from core.code_act_executor import run_codeact_task
+from functions.use_tools_to_analyze import use_tool_to_analyze
 from functions.auto_configuration import stronger_model_configuration
 import json
 import re
@@ -49,7 +49,7 @@ Your responsibilities:
 - Execute the sub-task thoroughly and produce a result that fulfills the stated objective.
 - After completing the sub-task, you MUST provide a completion statement that clearly describes what was done and what was produced, following the format required in the sub-task description.
 
-You MUST write executable Python code to accomplish the sub-task. Use the provided tool functions (write_file, read_file, execute_terminal_command, search_web, get_current_time) and allowed Python libraries.
+You have access to various tools (search_web, read_file, execute_terminal_command, write_file, get_current_time) to accomplish the sub-task. Use them as needed. For analysis and reasoning tasks, you can respond directly without using tools.
 """
 
 SUB_TASK_USER_PROMPT = """
@@ -142,16 +142,19 @@ def auto_planning(flow_messages:list) -> list:
 
 def execute_sub_task(sub_task_description:str, flow_messages:list) -> str:
     """
-    Execute a single sub-task using CodeAct mode.
+    Execute a single sub-task using use_tool_to_analyze.
     
-    Instead of the old JSON function-calling approach (which broke when
-    write_file content contained unescaped quotes/newlines), we now use
-    CodeAct: the LLM generates Python code directly, and we execute it
-    in a restricted environment. Python's triple-quoted strings naturally
-    handle multi-line content without escaping issues.
+    Instead of forcing CodeAct for every sub-task (which was wasteful for
+    non-coding tasks like analysis, search, or reasoning), we now delegate
+    to use_tool_to_analyze. It intelligently routes:
+    - Ordinary tool calls (search, read_file, etc.) → JSON function call
+    - write_file calls → CodeAct mode (avoids JSON escaping issues)
+    
+    This way, pure analysis sub-tasks don't waste tokens generating
+    unnecessary Python code wrappers.
     """
     try:
-        result = run_codeact_task(
+        result = use_tool_to_analyze(
             model_name=MODEL_NAME,
             base_url=BASE_URL,
             api_key=API_KEY,
@@ -163,9 +166,14 @@ def execute_sub_task(sub_task_description:str, flow_messages:list) -> str:
             extra_body=EXTRA_BODY,
             max_tokens=20000,
         )
-        return result
+        if result is None:
+            return "Sub-task returned empty result."
+        # use_tool_to_analyze may return a ChatCompletionMessage or str
+        if hasattr(result, 'content') and result.content:
+            return result.content
+        return str(result)
     except Exception as e:
-        print(f"[CodeAct] Sub-task execution failed: {e}")
+        print(f"[Sub-task] Execution failed: {e}")
         return f"Sub-task execution failed: {e}"
 
 def judge_whether_finish(flow_messages:list) -> bool:

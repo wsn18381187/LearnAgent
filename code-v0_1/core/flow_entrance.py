@@ -1,6 +1,8 @@
 from functions.get_model_response import get_model_response
 from core.condition_flow_definiton import CONDITION_FLOW_TOOL_DEFINITION
 from core.condition_flow import condition_flow
+from functions.choose_which_tools import choose_which_tools, get_tool_result
+from core.code_act_executor import run_codeact_task
 import json
 
 def flow_entrance(
@@ -15,9 +17,9 @@ def flow_entrance(
         messages: list = None,
         response_format: dict=None,
         extra_body: dict=None,
-        max_tool_turns: int=2
+        max_tool_turns: int=50
     ) -> str:
-    tools = [CONDITION_FLOW_TOOL_DEFINITION]
+    tools = [CONDITION_FLOW_TOOL_DEFINITION] + choose_which_tools(user_prompt, system_prompt)
     tool_call_count = 0
     consecutive_json_failures = 0
     MAX_CONSECUTIVE_JSON_FAILURES = 3
@@ -53,8 +55,29 @@ def flow_entrance(
             print(f"[Processing] Model chooses to use {function_name}.")
             try:
                 args = json.loads(tool_call.function.arguments)
-                result = condition_flow(args['task_description'])
-                content = str(result)
+                if function_name == "condition_flow":
+                    result = condition_flow(args['task_description'])
+                    content = str(result)
+                elif function_name == "write_file":
+                    print(f"[CodeAct] write_file triggered for {args.get('file_path')}, switching to CodeAct...")
+                    codeact_user_prompt = f"""Write a file at "{args.get('file_path')}" with the following description:
+{args.get('description', 'No description provided.')}
+
+Use the write_file() function to write the content. Make sure to create parent directories if needed (write_file handles this automatically).
+Print a success message when done."""
+                    result = run_codeact_task(
+                        model_name=model_name,
+                        base_url=base_url,
+                        api_key=api_key,
+                        system_prompt=system_prompt,
+                        user_prompt=codeact_user_prompt,
+                        extra_body=extra_body,
+                        max_tokens=max_tokens,
+                    )
+                    content = str(result)
+                else:
+                    result = get_tool_result(function_name, args)
+                    content = str(result)
                 consecutive_json_failures = 0
             except json.JSONDecodeError as e:
                 consecutive_json_failures += 1

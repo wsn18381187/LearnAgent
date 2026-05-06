@@ -16,7 +16,7 @@ def get_tool_result(function_name:str, args:dict) -> str:
         return get_current_time()
     elif function_name == "execute_terminal_command":
         print(f"[Processing] Opening a terminal to execute command...")
-        return execute_terminal_command(args['command'])
+        return execute_terminal_command(args["command"], args.get("background", False))
     elif function_name == "rag_history_search":
         print(f"[Processing] Try to search info of \"{args['query']}\" in past chat history...")
         return rag_history_search(args['query'])

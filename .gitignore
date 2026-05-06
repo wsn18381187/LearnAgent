@@ -13,6 +13,9 @@ code-v0_1/log/
 # 用户画像数据（私人数据）
 code-v0_1/user_info/
 
+# 临时日志文件
+code-v0_1/tmp/
+
 # Python 缓存文件
 __pycache__/
 *.pyc
