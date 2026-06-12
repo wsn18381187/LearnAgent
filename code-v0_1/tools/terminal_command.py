@@ -22,10 +22,15 @@ def execute_terminal_command(command: str, background: bool = False) -> str:
     """
     current_os = platform.system()
     
-    if background:
-        return _execute_background(command, current_os)
+    print(f"\033[36m[System]\033[0m Do you allow to execute this command in the background? \n Bash Command:\"{command}\"")
+    user_choice = input("\033[36my for yes and n for no\033[0m").strip()
+    if user_choice == "y" or user_choice == "Y":
+        if background:
+            return _execute_background(command, current_os)
+        else:
+            return _execute_sync(command, current_os)
     else:
-        return _execute_sync(command, current_os)
+        return f"User refused to execute the command {command}"
 
 
 def _kill_process(proc: subprocess.Popen) -> None:

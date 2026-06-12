@@ -35,9 +35,14 @@ if __name__ == "__main__":
     try:
         user_request = input("\033[34mwhat can I do 4 u: \033[0m").strip()
         while True:
-            if user_request == "exit":
+            if user_request == "/help" or user_request == "/?" or user_request == "/":
+                print("\033[90m/help or /?  --check for all available commands\033[0m")
+                print("\033[90m/exit        --save conversation and exit the agent\033[0m]")
+                print("\033[90m/clear       --clear and save current conversation, then start a new one\033[0m")
+                print("")
+            elif user_request == "/exit":
                 break
-            elif user_request == "clear":
+            elif user_request == "/clear":
                 print("\033[32m[System] Updating user image...\033[0m")
                 update_user_image(messages)
                 print("\033[32m[System] Updating database...\033[0m")
