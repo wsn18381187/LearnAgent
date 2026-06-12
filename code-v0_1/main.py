@@ -37,9 +37,11 @@ if __name__ == "__main__":
         while True:
             if user_request == "/help" or user_request == "/?" or user_request == "/":
                 print("\033[90m/help or /?  --check for all available commands\033[0m")
-                print("\033[90m/exit        --save conversation and exit the agent\033[0m]")
+                print("\033[90m/exit        --save conversation and exit the agent\033[0m")
                 print("\033[90m/clear       --clear and save current conversation, then start a new one\033[0m")
                 print("")
+                user_request = input().strip()
+                continue
             elif user_request == "/exit":
                 break
             elif user_request == "/clear":
