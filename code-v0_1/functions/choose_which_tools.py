@@ -44,4 +44,5 @@ def choose_which_tools(user_prompt:str, system_prompt:str) -> list:
             EXECUTE_COMMAND_DEFINITION,
             RAG_HISTORY_SEARCH_TOOL_DEFINITION,
             READ_FILE_TOOL_DEFINITION,
-            WRITE_FILE_TOOL_DEFINITION]
+            WRITE_FILE_TOOL_DEFINITION,
+            EDIT_FILE_TOOL_DEFINITION]

@@ -198,38 +198,41 @@ def edit_file(
 
 # Tool definition for CodeAct agent registration
 EDIT_FILE_TOOL_DEFINITION = {
-    "name": "edit_file",
-    "description": (
-        "Precisely replace a text fragment in a file using old_str → new_str matching. "
-        "The old_str must match exactly one location in the file (including whitespace "
-        "and indentation). If zero or multiple matches are found, the operation fails "
-        "with detailed error information to help you correct the match. "
-        "Supports multi-line replacements naturally."
-    ),
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "file_path": {
-                "type": "string",
-                "description": "Path to the target file to edit."
+    "type": "function",
+    "function": {
+        "name": "edit_file",
+        "description": (
+            "Precisely replace a text fragment in a file using old_str → new_str matching. "
+            "The old_str must match exactly one location in the file (including whitespace "
+            "and indentation). If zero or multiple matches are found, the operation fails "
+            "with detailed error information to help you correct the match. "
+            "Supports multi-line replacements naturally."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "file_path": {
+                    "type": "string",
+                    "description": "Path to the target file to edit."
+                },
+                "old_str": {
+                    "type": "string",
+                    "description": (
+                        "The exact text fragment to replace. Must match the file content "
+                        "exactly, including all whitespace, indentation, and newlines. "
+                        "Must be unique within the file."
+                    )
+                },
+                "new_str": {
+                    "type": "string",
+                    "description": "The new text to insert in place of old_str."
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Brief description of the modification intent (helps with understanding the purpose)."
+                }
             },
-            "old_str": {
-                "type": "string",
-                "description": (
-                    "The exact text fragment to replace. Must match the file content "
-                    "exactly, including all whitespace, indentation, and newlines. "
-                    "Must be unique within the file."
-                )
-            },
-            "new_str": {
-                "type": "string",
-                "description": "The new text to insert in place of old_str."
-            },
-            "description": {
-                "type": "string",
-                "description": "Brief description of the modification intent (helps with understanding the purpose)."
-            }
-        },
-        "required": ["file_path", "old_str", "new_str"]
+            "required": ["file_path", "old_str", "new_str"]
+        }
     }
 }

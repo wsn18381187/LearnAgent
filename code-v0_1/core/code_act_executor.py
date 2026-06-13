@@ -19,6 +19,7 @@ import traceback
 from tools.read_file import read_file
 from tools.terminal_command import execute_terminal_command
 from tools.write_file import write_file
+from tools.edit_file import edit_file
 from tools.search_web import search_web
 from tools.get_current_time import get_current_time
 
@@ -96,6 +97,7 @@ TOOL_FUNCTIONS = {
     "search_web": search_web,
     "get_current_time": get_current_time,
     "write_file": write_file,
+    "edit_file": edit_file,
 }
 
 # ---------------------------------------------------------------------------
@@ -110,6 +112,10 @@ The following functions are pre-imported and ready to use:
   write_file(file_path: str, content: str) -> str
       Write content to a file. Creates parent directories automatically.
       Returns a success/error message.
+
+  edit_file(file_path: str, old_str: str, new_str: str, description: str = "") -> str
+      Precisely replace old_str with new_str in a file. old_str must match
+      exactly one location. Returns a success/error message.
 
   read_file(file_path: str) -> str
       Read content from a file. Returns the file content or an error message.
