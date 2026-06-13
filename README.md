@@ -39,8 +39,7 @@ pip install openai python-dotenv chromadb
 ```python
 python main.py
 ```
-输入clear更新对话session
-输入exit退出对话
+输入`/`或`/?`或`/help`来查看菜单功能，如`/clear`清空当前上下文、`/exit`退出当前对话
 
 
 
