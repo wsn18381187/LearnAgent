@@ -26,9 +26,9 @@ def get_tool_result(function_name:str, args:dict) -> str:
         return read_file(args['file_path'])
     elif function_name == "write_file":
         # write_file in normal mode triggers CodeAct: the actual writing is done
-        # by run_codeact_task in use_tools_to_analyze.py, not here.
+        # by run_codeact_task in flow_entrance.py, not here.
         # This branch should not be reached directly; kept for safety.
-        print(f"[Processing] write_file triggered — should be handled by CodeAct in use_tools_to_analyze.py")
+        print(f"[Processing] write_file triggered — should be handled by CodeAct in flow_entrance.py")
         return "[CodeAct] write_file must be handled by CodeAct mode."
     elif function_name == "edit_file":
         print(f"[Processing] Editing file {args['file_path']}...")
@@ -36,7 +36,14 @@ def get_tool_result(function_name:str, args:dict) -> str:
     else:
         return None
 
-def choose_which_tools(user_prompt:str, system_prompt:str) -> list:
+def choose_which_tools() -> list:
+    """
+    Return the fixed list of available tool definitions.
+    
+    No longer takes user_prompt/system_prompt parameters — tools are
+    determined by the system's capabilities, not by the specific query.
+    The model decides which tools to use via tool_choice="auto".
+    """
     print(f"[Analysing] Viewing available tools...")
     return [ASK_USER_TOOL_DEFINITION, 
             SEARCH_WEB_TOOL_DEFINITION,

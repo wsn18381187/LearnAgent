@@ -10,7 +10,12 @@ MODEL_CONFIG = stronger_model_configuration()
 BASE_URL, API_KEY, MODEL_NAME, EXTRA_BODY = MODEL_CONFIG[0], MODEL_CONFIG[1], MODEL_CONFIG[2], MODEL_CONFIG[3]
 
 UPDATE_SYSTEM_PROMPT = """
-You are an intelligent User Profile Manager. Your task is to update the user's profile JSON based on the latest conversation. You will be provided with the current JSON, the new conversation, and the **current time**.
+You are an intelligent User Profile Manager. Your task is to update the user's profile JSON based on the latest conversation. You will be provided with the current JSON, the new conversation, and the current time.
+
+# Core Directives for Intelligent Management
+1. IGNORE TRIVIAL CHATS: Do NOT update the profile (except `last_interaction`) if the conversation consists only of short greetings (e.g., "hi", "hello"), meaningless test words (e.g., "test", "123"), or lacks substantive information.
+2. INTELLIGENT MERGING: If the current conversation relates to past topics or previous interactions, intelligently merge them into a single concise entry rather than adding a new one.
+3. RUTHLESS PRUNING: Always discard outdated, transient, or less important details to maintain limits. Keep the profile dense and meaningful.
 
 # JSON Schema (MUST be strictly followed)
 {
@@ -26,65 +31,43 @@ You are an intelligent User Profile Manager. Your task is to update the user's p
 # Field Update Rules
 
 ## 1. `basic_info` (Stable identity attributes)
-- Record ONLY fundamental, long-term identity information about the user: name, location, profession, education level, etc.
-- Update only when new information contradicts or supplements existing entries.
-- Do NOT record transient states or one-time events here.
+- Record ONLY fundamental, long-term identity info (name, location, profession, education, etc.).
+- Overwrite only if new information contradicts or updates existing entries.
 
-## 2. `preferences` (Enduring user preferences & traits)
-- Record the user's stable preferences, habits, interaction style, and personality traits.
-- Examples: "prefers concise answers", "enjoys dark humor", "uses Python as primary language".
-- Merge similar preferences. Remove preferences that are clearly contradicted by recent behavior.
-- Keep this array concise — aim for 5-10 items maximum.
+## 2. `preferences` (Enduring traits & preferences)
+- STRICT LIMIT: Maximum 10 words/characters per item.
+- Record stable preferences, habits, and interaction styles.
+- Merge similar preferences. Remove outdated ones.
 
-## 3. `facts` (Key factual knowledge about the user — STRICT 50 ITEM LIMIT)
-This is the most critical field. You MUST keep it at or under 50 items. If the current facts plus new ones would exceed 50, you MUST intelligently prune before adding.
+## 3. `facts` (Key factual knowledge - STRICT 30 ITEM LIMIT)
+- ARRAY LIMIT: Maximum 30 items in total.
+- LENGTH LIMIT: Maximum 10 words/characters per item.
+- KEEP (High Value): Identity, achievements, core skills, active long-term projects.
+- DISCARD (Low Value): One-time bugs, transient queries, minor tool usage, trivia.
+- Pruning & Merging Strategy (if approaching 30 items): 
+  1. Delete transient/low-value items first.
+  2. Merge related facts (e.g., merge multiple bug fixes into one skill description).
+  3. Delete the oldest/least important facts if necessary.
 
-### What BELONGS in facts (HIGH VALUE — keep these):
-- **Identity & Background**: nationality, passport/citizenship, education, professional credentials.
-- **Achievements & Awards**: competition results, certifications, honors, GPA/rankings.
-- **Technical Skills & Knowledge**: programming languages, frameworks, tools the user has demonstrated proficiency in.
-- **Active Projects**: ongoing development work, research, learning goals the user is actively pursuing.
-- **Hardware/Environment**: devices, OS, development environment that affect how the user works.
-- **Strong Opinions & Stances**: firmly held technical opinions, design philosophies, tool preferences.
-- **Relationship with AI**: how the user views and interacts with the AI assistant (only if it's a stable pattern).
-
-### What does NOT belong in facts (LOW VALUE — remove these first when pruning):
-- **One-time debugging events**: "check the bug in one function", "find problem in one line of code" — these are chat_history, not facts.
-- **Transient queries**: "query the meaning of one API argument", "use AI to check the code of one filepath" — one-off questions.
-- **Minor tool usage**: "using condition flow mode to do something" — unless it reveals a new skill or preference.
-- **Redundant details**: if a fact is already covered by a more general fact, remove the specific one.
-- **Stale/outdated information**: if the user has clearly moved on from something, remove it.
-- **Conversational trivia**: casual remarks, jokes, memes that don't reveal enduring traits.
-
-### Pruning Strategy (when facts exceed 50):
-1. **First, remove LOW VALUE items** as defined above — one-time events, transient queries, minor tool usage.
-2. **Then, merge similar items**: combine multiple related facts into one concise statement. E.g., "排查了A bug", "排查了B bug", "排查了C bug" → "多次排查LearnAgent框架代码bug".
-3. **Then, remove stale items**: facts about things the user has clearly finished or abandoned.
-4. **As a last resort**, remove the oldest less-important facts, but NEVER remove identity, achievements, or active project facts.
-
-### Format:
-- Each fact MUST be a single, concise sentence in Chinese.
-- Each fact MUST describe the USER directly, not the AI or the conversation.
-- Do NOT include timestamps or dates within fact strings.
-
-## 4. `chat_history` (Event log — STRICT 50 ITEM LIMIT)
-- Each entry format: "YYYY-MM-DD HH:mm, [Brief summary of the conversation/event]".
-- **Smart Merging**: If the current conversation continues a topic already in chat_history, update the existing entry's timestamp and summary instead of adding a new one.
-- **De-duplication**: If two entries describe essentially the same event, merge them.
-- When exceeding 50 items, remove the oldest entries first (FIFO).
-- Keep summaries extremely concise — one line each.
+## 4. `chat_history` (Event log - STRICT 30 ITEM LIMIT)
+- ARRAY LIMIT: Maximum 30 items in total.
+- Format: "YYYY-MM-DD HH:mm, [Summary]".
+- LENGTH LIMIT: The [Summary] part MUST NOT exceed 15 words/characters.
+- Smart Merging: If continuing a previous topic, DO NOT add a new entry. Instead, UPDATE the existing entry's timestamp and summary.
+- Ignore Trivialities: NEVER add greetings, test words, or meaningless chats to this array.
+- De-duplication: Merge entries describing similar events. Drop the oldest entries (FIFO) if exceeding 30.
 
 ## 5. `last_interaction`
-- Update with the provided current time string.
+- Update with the provided current time string. This part alse MUST NOT exceed 15 words/characters.
 
 ---
 
 # Strict Output Constraints
 - Output ONLY the raw, valid JSON string.
-- NO Markdown formatting (no ```json fences).
-- NO greetings, explanations, or any text outside the JSON.
-- The JSON must be valid and parseable by Python's json.loads().
-- All string values must use double quotes.
+- NO Markdown formatting of any kind (do NOT use ```json fences).
+- NO greetings, explanations, or conversational text outside the JSON.
+- The JSON must be parseable by Python's `json.loads()`.
+- Use double quotes for all strings and keys.
 """
 
 UPDATE_USER_PROMPT = """
@@ -98,10 +81,13 @@ UPDATE_USER_PROMPT = """
 
 Time of current conversation: {conversation_time}
 
-Please update the profile based on the conversation history. Remember:
-- facts array MUST NOT exceed 50 items. Prune low-value items if needed.
-- chat_history array MUST NOT exceed 50 items. Remove oldest if needed.
-- Update the summary to reflect the latest understanding of the user.
+Please intelligently update the profile JSON based on the conversation history. Remember the absolute constraints:
+- Ignore trivial conversations (greetings, tests, etc.) entirely.
+- `facts` array: MAX 30 items. Each item MAX 10 words/characters.
+- `chat_history` array: MAX 30 items. Each summary MAX 15 words/characters.
+- `preferences` array: Each item MAX 10 words/characters.
+- Intelligently merge similar or continuing topics to save space. Discard low-value details.
+- Output ONLY valid, raw JSON. No markdown formatting.
 """
 
 def update_user_image(messages: list = None):
@@ -144,8 +130,8 @@ def update_user_image(messages: list = None):
     except Exception as e:
         raise Exception(f"json.loads() failed. Raw response:\n{response}\nError: {e}")
 
-    MAX_FACTS = 50
-    MAX_CHAT_HISTORY = 50
+    MAX_FACTS = 30
+    MAX_CHAT_HISTORY = 30
 
     if "facts" in updated_user_image and len(updated_user_image["facts"]) > MAX_FACTS:
         print(f"[Warning] Model returned {len(updated_user_image['facts'])} facts, trimming to {MAX_FACTS}.")

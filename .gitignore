@@ -1,6 +1,9 @@
 # 环境变量文件（含API密钥等敏感信息）
 code-v0_1/.env
 
+# 配置文件
+code-v0_1/config.json
+
 # ChromaDB 向量数据库（二进制数据，无需版本控制）
 code-v0_1/chromaDB/
 

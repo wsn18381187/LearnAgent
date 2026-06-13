@@ -18,8 +18,8 @@ pip install openai python-dotenv chromadb
 然后cd至LearnAgent/code-v0_1所在的文件路径
 
 **配置API**
-+ 在当前工作目录下创建一个.env文件用来管理你的所有API KEY，包括调用模型的API KEY和搜索API KEY
-+ 在`functions/auto_configuration.py`中设定好Base URL，模型名称和其它参数，可以设置强模型和弱模型搭配使用
++ 在当前工作目录下创建一个.env文件用来管理你的API KEY，包括embedding模型的API KEY和搜索API KEY
++ 在当前工作目录下创建一个`config.json`用来记录模型配置参数，json格式参考`config_template.json`，复制其中的内容即可。同时模型参数的配置可以在启动agent之后跟随指引配置
 + 在`functions/get_embedding.py`中，选择好你想使用的embedding模型，并且确定之后不要更改，这是实现RAG向量库的embedding核心，不想改的话用我的同款模型也可以，不过需要一个OpenRouter API-KEY。其实这种小模型本地部署也行。
 
 **用户画像**

@@ -23,7 +23,7 @@ def execute_terminal_command(command: str, background: bool = False) -> str:
     current_os = platform.system()
     
     print(f"\033[36m[System]\033[0m Do you allow to execute this command in the background? \n Bash Command:\"{command}\"")
-    user_choice = input("\033[36my for yes and n for no\033[0m").strip()
+    user_choice = input("\033[36m'y' for yes and 'n' for no > \033[0m").strip()
     if user_choice == "y" or user_choice == "Y":
         if background:
             return _execute_background(command, current_os)
@@ -62,8 +62,8 @@ def _execute_sync(command: str, current_os: str) -> str:
             stdout, stderr = proc.communicate(timeout=TIMEOUT)
             
             output = (f"OS: {current_os}\n"
-                      f"Stdout: {stdout}\n"
-                      f"Stderr: {stderr}\n"
+                      f"Stdout: \n{stdout}\n"
+                      f"Stderr: \n{stderr}\n"
                       f"Return Code: {proc.returncode}")
             print("+--terminal------------------------")
             print(output)

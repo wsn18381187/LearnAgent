@@ -2,7 +2,8 @@ import os
 import sys
 import json
 from datetime import datetime
-from functions.judge_which_model import judge_which_model
+from functions.judge_which_model import judge_difficulty
+from core.flow_entrance import flow_entrance
 from functions.user_image import update_user_image, provide_user_image
 from functions.auto_history_embedding import auto_history_embedding
 from functions.auto_configuration import show_current_config, set_config, validate_config
@@ -87,7 +88,14 @@ if __name__ == "__main__":
                 continue
 
             messages.append({"role":"user", "content":user_request})
-            response_content = judge_which_model(messages)
+            # ---- CHANGED: router only judges difficulty, flow_entrance handles the rest ----
+            difficulty = judge_difficulty(messages)
+            response = flow_entrance(
+                difficulty=difficulty,
+                messages=messages,
+                max_tokens=20000 if difficulty in ("COMPLEX", "EXTREME") else 2000,
+            )
+            response_content = response.content if hasattr(response, 'content') else str(response)
             messages.append({"role":"assistant", "content":response_content})
             user_request = input("\033[34mAny other questions: \033[0m")
     except KeyboardInterrupt:

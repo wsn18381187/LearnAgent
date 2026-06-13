@@ -1,0 +1,8 @@
+{
+    "API_KEY": "",
+    "BASE_URL": "",
+    "WEAKER_MODEL_NAME": "",
+    "WEAKER_EXTRA_BODY": {},
+    "STRONGER_MODEL_NAME": "",
+    "STRONGER_EXTRA_BODY": {}
+}
