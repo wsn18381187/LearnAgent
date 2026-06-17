@@ -13,7 +13,7 @@ LearnAgent是一个agent框架，接入OpenAI兼容的模型即可使用。Learn
 ```bash
 conda create -n la python==3.10
 conda activate la
-pip install openai python-dotenv chromadb
+pip install -r requirement.txt
 ```
 然后cd至LearnAgent/code-v0_1所在的文件路径
 
