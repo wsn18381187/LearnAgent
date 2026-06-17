@@ -207,6 +207,7 @@ def run_codeact_task(
     user_prompt: str,
     extra_body: dict = None,
     max_tokens: int = 20000,
+    file_path: str = None
 ) -> str:
     """
     Full CodeAct pipeline for a single sub-task:
@@ -229,6 +230,11 @@ def run_codeact_task(
     """
     from functions.get_model_response import get_model_response
     
+    print(f"\033[36mDo you allow LearnAgent to write into {file_path}?\033[0m")
+    user_choice = input("\033[36m'y' for yes and 'n' for no > \033[0m").strip()
+    if user_choice != "y" and user_choice != "Y":
+        return f"User refused to write the file {file_path}."
+
     # Build the full system prompt with CodeAct instructions
     full_system_prompt = system_prompt + "\n\n" + CODEACT_INSTRUCTION
     

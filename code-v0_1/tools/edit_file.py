@@ -152,6 +152,11 @@ def edit_file(
     if not os.path.isfile(file_path):
         return f"Error: '{file_path}' is not a file."
 
+    print(f"\033[36mDo you allow LearnAgent to edit {file_path}?\033[0m")
+    user_choice = input("\033[36m'y' for yes and 'n' for no > \033[0m").strip()
+    if user_choice != "y" and user_choice != "Y":
+        return f"User refused to edit the file {file_path}."
+
     # Read file content
     try:
         with open(file_path, "r", encoding="utf-8") as f:

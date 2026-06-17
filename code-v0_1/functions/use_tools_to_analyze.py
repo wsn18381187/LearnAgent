@@ -67,6 +67,7 @@ Print a success message when done."""
                         user_prompt=codeact_user_prompt,
                         extra_body=extra_body,
                         max_tokens=max_tokens,
+                        file_path=args.get('file_path')
                     )
                     content = str(result)
                 else:

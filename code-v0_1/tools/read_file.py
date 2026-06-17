@@ -14,6 +14,7 @@ ALLOWED_EXTENSIONS = {
 def read_file(file_path: str) -> str:
     """Read content from a file. Supports code and markup formats."""
     # Resolve to absolute path and normalize
+
     abs_path = os.path.abspath(os.path.expanduser(file_path))
 
     # Check if path exists
@@ -37,6 +38,13 @@ def read_file(file_path: str) -> str:
             return f"Error: File too large ({size} bytes). Max 1MB allowed."
     except OSError as e:
         return f"Error: Cannot access file: {e}"
+
+
+    print(f"\033[36mDo you allow LearnAgent to read {file_path}?\033[0m")
+    user_choice = input("\033[36m'y' for yes and 'n' for no > \033[0m").strip()
+    if user_choice != "y" and user_choice != "Y":
+        return f"User refused to read the file {file_path}."
+
 
     # Read and return content
     try:

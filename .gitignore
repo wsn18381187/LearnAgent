@@ -30,3 +30,12 @@ __pycache__/
 # IDE 配置
 .vscode/
 .idea/
+
+# gitignore
+.gitignore
+
+# prompt历史输入
+code-v0_1/.history
+
+# prompt_toolkit测试脚本
+code-v0_1/prompttest.py

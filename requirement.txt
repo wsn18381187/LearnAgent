@@ -1,5 +1,4 @@
-langchain
-langgraph
 python-dotenv
 chromadb
 openai
+prompt_toolkit
