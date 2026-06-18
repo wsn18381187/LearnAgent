@@ -14,7 +14,7 @@ code-v0_1/history/
 code-v0_1/log/
 
 # 用户画像数据（私人数据）
-code-v0_1/user_info/
+code-v0_1/user_info/user_image.json
 
 # 临时日志文件
 code-v0_1/tmp/
@@ -36,6 +36,7 @@ __pycache__/
 
 # prompt历史输入
 code-v0_1/.history
+code-v0_1/.config_value_history
 
 # prompt_toolkit测试脚本
 code-v0_1/prompttest.py

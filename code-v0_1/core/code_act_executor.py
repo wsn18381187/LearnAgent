@@ -16,6 +16,8 @@ This module provides a restricted execution environment that:
 import sys
 import io
 import traceback
+from prompt_toolkit.shortcuts import choice
+from prompt_toolkit.formatted_text import HTML
 from tools.read_file import read_file
 from tools.terminal_command import execute_terminal_command
 from tools.write_file import write_file
@@ -207,7 +209,8 @@ def run_codeact_task(
     user_prompt: str,
     extra_body: dict = None,
     max_tokens: int = 20000,
-    file_path: str = None
+    file_path: str = None,
+    mode: str = "off"
 ) -> str:
     """
     Full CodeAct pipeline for a single sub-task:
@@ -230,10 +233,24 @@ def run_codeact_task(
     """
     from functions.get_model_response import get_model_response
     
-    print(f"\033[36mDo you allow LearnAgent to write into {file_path}?\033[0m")
-    user_choice = input("\033[36m'y' for yes and 'n' for no > \033[0m").strip()
-    if user_choice != "y" and user_choice != "Y":
-        return f"User refused to write the file {file_path}."
+    if mode != "on":
+        user_choice = choice(
+            message=HTML(f'<ansicyan>Do you allow LearnAgent to write into {file_path}?</ansicyan>'),
+            options=[
+                ("yes", HTML('<ansigrey>Yes.</ansigrey>')),
+                ("no", HTML('<ansigrey>No.</ansigrey>'))
+            ],
+            default="yes",
+            bottom_toolbar=HTML(
+                " <ansigray>↑↓ Move to choose</ansigray>  "
+                "<ansigray>Enter to confirm</ansigray>  "
+            ),
+        )
+    
+        if user_choice != "yes":
+            return f"User refused to write into the file {file_path}. Stop further actions and ask for user's instruction in a short and brief way."
+    
+    print("[Processing] Writing...")
 
     # Build the full system prompt with CodeAct instructions
     full_system_prompt = system_prompt + "\n\n" + CODEACT_INSTRUCTION

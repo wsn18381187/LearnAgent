@@ -17,6 +17,8 @@ Key design decisions:
 
 import os
 from pathlib import Path
+from prompt_toolkit.formatted_text import HTML
+from prompt_toolkit.shortcuts import choice
 
 # File extension whitelist (consistent with write_file)
 ALLOWED_EXTENSIONS = {
@@ -127,6 +129,7 @@ def edit_file(
     old_str: str,
     new_str: str,
     description: str = "",
+    mode: str = "off"
 ) -> str:
     """
     Replace old_str with new_str in the specified file.
@@ -152,10 +155,24 @@ def edit_file(
     if not os.path.isfile(file_path):
         return f"Error: '{file_path}' is not a file."
 
-    print(f"\033[36mDo you allow LearnAgent to edit {file_path}?\033[0m")
-    user_choice = input("\033[36m'y' for yes and 'n' for no > \033[0m").strip()
-    if user_choice != "y" and user_choice != "Y":
-        return f"User refused to edit the file {file_path}."
+    if mode != "on":
+        user_choice = choice(
+            message=HTML(f'<ansicyan>Do you allow LearnAgent to edit {file_path}?</ansicyan>'),
+            options=[
+                ("yes", HTML('<ansigrey>Yes.</ansigrey>')),
+                ("no", HTML('<ansigrey>No.</ansigrey>'))
+            ],
+            default="yes",
+            bottom_toolbar=HTML(
+                " <ansigray>↑↓ Move to choose</ansigray>  "
+                "<ansigray>Enter to confirm</ansigray>  "
+            ),
+        )
+    
+        if user_choice != "yes":
+            return f"User refused to edit the file {file_path}. Stop further actions and ask for user's instruction in a short and brief way."
+    
+    print("[Processing] Editing...")
 
     # Read file content
     try:

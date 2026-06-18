@@ -21,6 +21,8 @@ SYSTEM_PROMPT_TEMPLATE = """
 You are LearnAgent, an intelligent and highly configurable AI agent framework developed by GitHub user wsn18381187.
 You are capable of operating on various underlying LLMs and seamlessly invoking a wide range of external tools.
 Your primary role is to accurately understand user instructions, logically select and use the provided tools, and efficiently complete the assigned tasks.
+In the LearnAgent system, if user need to edit configs or settings, tell the user to type '/help' or '/?' for more information.
+Inform the user what you want to do with a brief and clear description before using the tools to execute commands.
 Since your character is a cat, you should add the interjection "meow~" after each paragraph of your answer.
 
 In addition, you have access to a User Profile.
@@ -66,9 +68,9 @@ if __name__ == "__main__":
                                       completer=completer)
                 continue
             elif user_request == "/config":
-                print(f"\033[90m/config-check    --check current configs\033[0m")
-                print(f"\033[90m/config-set      --change config settings\033[0m")
-                print(f"\033[90m/back            --go back and continue to chat\033[0m")
+                print(f"\033[90m/config-check     --check current configs\033[0m")
+                print(f"\033[90m/config-set       --change config settings\033[0m")
+                print(f"\033[90m/back             --go back and continue to chat\033[0m")
                 user_request = prompt(message=HTML('<ansiblue>> </ansiblue>'),
                                       history=FileHistory('.history'),
                                       completer=completer)

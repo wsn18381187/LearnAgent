@@ -1,3 +1,5 @@
+from functions.auto_configuration import get_config
+
 from tools.ask_user_more_info import ASK_USER_TOOL_DEFINITION, ask_user_more_info
 from tools.search_web import SEARCH_WEB_TOOL_DEFINITION, search_web
 from tools.get_current_time import TIME_TOOL_DEFINITION, get_current_time
@@ -16,14 +18,16 @@ def get_tool_result(function_name:str, args:dict) -> str:
     elif function_name == "get_current_time":
         return get_current_time()
     elif function_name == "execute_terminal_command":
+        execute_mode = get_config("AUTO_EXECUTE_MODE")
         print(f"[Processing] Opening a terminal to execute command...")
-        return execute_terminal_command(args["command"], args.get("background", False))
+        return execute_terminal_command(args["command"], args.get("background", False), mode=execute_mode)
     elif function_name == "rag_history_search":
         print(f"[Processing] Try to search info of \"{args['query']}\" in past chat history...")
         return rag_history_search(args['query'])
     elif function_name == "read_file":
+        read_file_mode = get_config("AUTO_READ_MODE")
         print(f"[Processing] Reading file {args['file_path']}")
-        return read_file(args['file_path'])
+        return read_file(args['file_path'], mode=read_file_mode)
     elif function_name == "write_file":
         # write_file in normal mode triggers CodeAct: the actual writing is done
         # by run_codeact_task in use_tools_to_analyze.py, not here.
@@ -31,8 +35,9 @@ def get_tool_result(function_name:str, args:dict) -> str:
         print(f"[Processing] write_file triggered — should be handled by CodeAct in use_tools_to_analyze.py")
         return "[CodeAct] write_file must be handled by CodeAct mode."
     elif function_name == "edit_file":
+        edit_file_mode = get_config("AUTO_EDIT_MODE")
         print(f"[Processing] Editing file {args['file_path']}...")
-        return edit_file(args['file_path'], args['old_str'], args['new_str'])
+        return edit_file(args['file_path'], args['old_str'], args['new_str'], mode=edit_file_mode)
     else:
         return None
 

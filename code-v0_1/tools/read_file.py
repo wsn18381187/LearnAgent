@@ -1,6 +1,8 @@
 # Note: this function is developed by LearnAgent itself.
 
 import os
+from prompt_toolkit.formatted_text import HTML
+from prompt_toolkit.shortcuts import choice
 
 ALLOWED_EXTENSIONS = {
     ".py", ".js", ".ts", ".java", ".c", ".cpp", ".h", ".hpp", ".rs", ".go",
@@ -11,7 +13,7 @@ ALLOWED_EXTENSIONS = {
 }
 
 
-def read_file(file_path: str) -> str:
+def read_file(file_path: str, mode: str="off") -> str:
     """Read content from a file. Supports code and markup formats."""
     # Resolve to absolute path and normalize
 
@@ -39,11 +41,24 @@ def read_file(file_path: str) -> str:
     except OSError as e:
         return f"Error: Cannot access file: {e}"
 
-
-    print(f"\033[36mDo you allow LearnAgent to read {file_path}?\033[0m")
-    user_choice = input("\033[36m'y' for yes and 'n' for no > \033[0m").strip()
-    if user_choice != "y" and user_choice != "Y":
-        return f"User refused to read the file {file_path}."
+    if mode != "on":
+        user_choice = choice(
+            message=HTML(f'<ansicyan>Do you allow LearnAgent to read {file_path}?</ansicyan>'),
+            options=[
+                ("yes", HTML('<ansigrey>Yes.</ansigrey>')),
+                ("no", HTML('<ansigrey>No.</ansigrey>'))
+            ],
+            default="yes",
+            bottom_toolbar=HTML(
+                " <ansigray>↑↓ Move to choose</ansigray>  "
+                "<ansigray>Enter to confirm</ansigray>  "
+            ),
+        )
+    
+        if user_choice != "yes":
+            return f"User refused to read the file {file_path}. Stop further actions and ask for user's instruction in a short and brief way."
+    
+    print("[Processing] Reading...")
 
 
     # Read and return content

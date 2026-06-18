@@ -4,13 +4,15 @@ import time
 import os
 import signal
 from datetime import datetime
+from prompt_toolkit.formatted_text import HTML
+from prompt_toolkit.shortcuts import choice
 
 CURRENT_OS = platform.system()
 ATTEMPT_TIME = 3
 TIMEOUT = 30
 BG_LOG_DIR = "/tmp/learnagent_bg_tasks"
 
-def execute_terminal_command(command: str, background: bool = False) -> str:
+def execute_terminal_command(command: str, background: bool = False, mode: str = "off") -> str:
     """
     Execute a terminal command on the local system.
     
@@ -22,25 +24,41 @@ def execute_terminal_command(command: str, background: bool = False) -> str:
     """
     current_os = platform.system()
     
-    print(f"\033[36m[System]\033[0m Do you allow to execute this command in the background? \n Bash Command:\"{command}\"")
-    user_choice = input("\033[36m'y' for yes and 'n' for no > \033[0m").strip()
-    if user_choice == "y" or user_choice == "Y":
-        if background:
-            return _execute_background(command, current_os)
-        else:
-            return _execute_sync(command, current_os)
+    if mode != "on":
+        user_choice = choice(
+            message=HTML(f'<ansicyan>Do you allow LearnAgent to run the command {command}{" in the background" if background else ""}?</ansicyan>'),
+            options=[
+                ("yes", HTML('<ansigrey>Yes.</ansigrey>')),
+                ("no", HTML('<ansigrey>No.</ansigrey>'))
+            ],
+            default="yes",
+            bottom_toolbar=HTML(
+                " <ansigray>↑↓ Move to choose</ansigray>  "
+                "<ansigray>Enter to confirm</ansigray>  "
+            ),
+        )
+    
+        if user_choice != "yes":
+            return f"User refused to run the command {command}. Stop further actions and ask for user's instruction in a short and brief way."
+    print("[Processing] Exacuting...")
+    if background:
+        return _execute_background(command, current_os)
     else:
-        return f"User refused to execute the command {command}"
+        return _execute_sync(command, current_os)
 
 
 def _kill_process(proc: subprocess.Popen) -> None:
     """Kill a process and its entire process group. Best-effort, never raises."""
+    if proc is None:
+        return
     try:
-        os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+        pgid = os.getpgid(proc.pid)
+        # os.kill with negative pid sends signal to process group — POSIX standard, cross-platform
+        os.kill(-pgid, signal.SIGTERM)
         try:
             proc.wait(timeout=3)
         except subprocess.TimeoutExpired:
-            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+            os.kill(-pgid, signal.SIGKILL)
             proc.wait()
     except (ProcessLookupError, OSError):
         pass  # Process already gone
@@ -109,13 +127,15 @@ def _execute_background(command: str, current_os: str) -> str:
                 start_new_session=True,
             )
         
+        pgid = os.getpgid(proc.pid)
         output = (f"OS: {current_os}\n"
                   f"Background task started.\n"
                   f"PID: {proc.pid}\n"
+                  f"PGID: {pgid}\n"
                   f"Log file: {log_path}\n"
                   f"Check status: execute_terminal_command('ps -p {proc.pid}') — empty stdout means finished.\n"
                   f"Read output: read_file('{log_path}')\n"
-                  f"Kill task: execute_terminal_command('kill -TERM -- -$(ps -o pgid= -p {proc.pid} | tr -d \" \")')")
+                  f"Kill task: execute_terminal_command('kill -TERM -{pgid}')")
         print("+--terminal (background)-----------")
         print(output)
         print("+----------------------------------")

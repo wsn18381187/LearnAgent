@@ -1,6 +1,7 @@
 from functions.get_model_response import get_model_response
 from functions.choose_which_tools import choose_which_tools, get_tool_result
 from core.code_act_executor import run_codeact_task
+from functions.auto_configuration import get_config
 import json
 
 def use_tool_to_analyze(
@@ -59,6 +60,7 @@ def use_tool_to_analyze(
 
 Use the write_file() function to write the content. Make sure to create parent directories if needed (write_file handles this automatically).
 Print a success message when done."""
+                    edit_file_mode = get_config("AUTO_EDIT_MODE")
                     result = run_codeact_task(
                         model_name=model_name,
                         base_url=base_url,
@@ -67,7 +69,8 @@ Print a success message when done."""
                         user_prompt=codeact_user_prompt,
                         extra_body=extra_body,
                         max_tokens=max_tokens,
-                        file_path=args.get('file_path')
+                        file_path=args.get('file_path'),
+                        mode=edit_file_mode
                     )
                     content = str(result)
                 else:

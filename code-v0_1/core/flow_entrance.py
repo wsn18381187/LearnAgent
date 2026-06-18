@@ -3,6 +3,7 @@ from core.condition_flow_definiton import CONDITION_FLOW_TOOL_DEFINITION
 from core.condition_flow import condition_flow
 from functions.choose_which_tools import choose_which_tools, get_tool_result
 from core.code_act_executor import run_codeact_task
+from functions.auto_configuration import get_config
 import json
 
 def flow_entrance(
@@ -65,6 +66,7 @@ def flow_entrance(
 
 Use the write_file() function to write the content. Make sure to create parent directories if needed (write_file handles this automatically).
 Print a success message when done."""
+                    edit_file_mode = get_config("AUTO_EDIT_MODE")
                     result = run_codeact_task(
                         model_name=model_name,
                         base_url=base_url,
@@ -73,6 +75,7 @@ Print a success message when done."""
                         user_prompt=codeact_user_prompt,
                         extra_body=extra_body,
                         max_tokens=max_tokens,
+                        mode=edit_file_mode
                     )
                     content = str(result)
                 else:

@@ -4,5 +4,8 @@
     "WEAKER_MODEL_NAME": "",
     "WEAKER_EXTRA_BODY": {},
     "STRONGER_MODEL_NAME": "",
-    "STRONGER_EXTRA_BODY": {}
+    "STRONGER_EXTRA_BODY": {},
+    "AUTO_EDIT_MODE": "off",
+    "AUTO_READ_MODE": "off",
+    "AUTO_EXECUTE_MODE": "off"
 }
