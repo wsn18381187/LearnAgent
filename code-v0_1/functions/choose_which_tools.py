@@ -11,7 +11,10 @@ from tools.edit_file import EDIT_FILE_TOOL_DEFINITION, edit_file
 
 def get_tool_result(function_name:str, args:dict) -> str:
     if function_name == "ask_user_more_info":
-        return ask_user_more_info(args['question'])
+        return ask_user_more_info(
+            questions=args['questions'],
+            title=args.get('title', 'Questionnaire')
+        )
     elif function_name == "search_web":
         print(f"[Processing] Searching the info of \"{args['query']}\"")
         return search_web(args['query'])

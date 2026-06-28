@@ -20,20 +20,11 @@ pip install -r requirement.txt
 **配置API**
 + 在当前工作目录下创建一个.env文件用来管理你的API KEY，包括embedding模型的API KEY和搜索API KEY
 + 在当前工作目录下创建一个`config.json`用来记录模型配置参数，json格式参考`config_template.json`，复制其中的内容即可。同时模型参数的配置可以在启动agent之后跟随指引配置
-+ 在`functions/get_embedding.py`中，选择好你想使用的embedding模型，并且确定之后不要更改，这是实现RAG向量库的embedding核心，不想改的话用我的同款模型也可以，不过需要一个OpenRouter API-KEY。其实这种小模型本地部署也行。
++ 在`functions/get_embedding.py`中，选择好你想使用的embedding模型，并且确定之后不要更改，这是实现RAG向量库的embedding核心，不想改的话用我的同款模型也可以，不过需要一个OpenRouter API-KEY。其实这种小模型本地部署也行，但是每次使用都要打开/关闭不是很方便，直接调用是更省心的方法。
 
 **用户画像**
 
-直接复制下面的内容，创建一个`user_info`文件夹，在此文件夹下创建一个`user_image.json`并粘贴即可
-```json
-{
-  "basic_info": {},
-  "preferences": [],
-  "facts": [],
-  "chat_history": [],
-  "last_interaction": ""
-}
-```
+参考`user_info/user_image_template.json`中的template生成一个自己的`user_image.json`即可，或者直接给template改个名也行。
 
 **启动程序**
 ```python
@@ -44,6 +35,11 @@ python main.py
 
 
 ## 开发日志
+**6.28**
++ 添加了主程序中输入检查功能，当为空时不作为消息输入，避免在agent运行期间不小心按到空格导致后续对话自动接收空输入并输出
++ 添加了一个`/btw`功能，用来在不打断当前主要对话的情况下问一个相关问题
++ 更新了`ask_user_more_info`功能，之前只是个测试tool，现在改成了可以让agent向用户同时问多个问题、并有预设选项的tool。当预设选项中没有用户想要选择的选项时，还可以自行输入对应的回答
+
 **6.18**
 + 使用`prompt_toolkit`中的选择模块优化了文件操作和终端指令中的选择功能
 + 修复了终端指令中控制终端长期运行/关闭的逻辑bug，使用全平台通用的指令

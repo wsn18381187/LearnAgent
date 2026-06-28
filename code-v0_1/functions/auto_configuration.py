@@ -7,6 +7,8 @@ from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.shortcuts import choice
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit import PromptSession
+from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.keys import Keys
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONFIG_PATH = os.path.join(BASE_DIR, "config.json")
@@ -130,6 +132,12 @@ def show_current_config() -> None:
 def set_config() -> None:
     """使用 prompt_toolkit choice 优化后的配置设置交互。"""
     
+    # 构建 Esc 退出的 key bindings
+    kb = KeyBindings()
+    @kb.add(Keys.Escape)
+    def _exit_config(event):
+        event.app.exit(result="__DONE__")
+    
     while True:
         config._refresh_if_needed()
         keys = list(config._cache.keys())
@@ -142,10 +150,11 @@ def set_config() -> None:
             ),
             options=options,
             default=keys[0] if keys else "__ADD_NEW__",
+            key_bindings=kb,
             bottom_toolbar=HTML(
                 ' <ansigray>↑↓ Move</ansigray>  '
                 '<ansigray>Enter Select</ansigray>  '
-                '<ansigray>Ctrl+C Quit</ansigray>'
+                '<ansigray>Esc Quit</ansigray>'
             ),
         )
         

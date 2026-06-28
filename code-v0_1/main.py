@@ -11,6 +11,7 @@ from functions.judge_which_model import judge_which_model
 from functions.user_image import update_user_image, provide_user_image
 from functions.auto_history_embedding import auto_history_embedding
 from functions.auto_configuration import show_current_config, set_config, validate_config
+from functions.by_the_way import by_the_way
 
 
 completer = WordCompleter([]) # Temporary Unfinished
@@ -59,10 +60,26 @@ if __name__ == "__main__":
                               completer=completer)
         while True:
             if user_request == "/help" or user_request == "/?" or user_request == "/":
+                print("\033[90m/btw              --ask a quick side question without interrupt current conversation")
                 print("\033[90m/config           --check or change configs")
                 print("\033[90m/clear            --clear and save current conversation, then start a new one\033[0m")
                 print("\033[90m/exit             --save conversation and exit the agent\033[0m")
                 print("\033[90m/help or /?       --check for all available commands\033[0m")
+                user_request = prompt(message=HTML('<ansiblue>> </ansiblue>'),
+                                      history=FileHistory('.history'),
+                                      completer=completer)
+                continue
+            elif user_request == "/btw":
+                user_request = prompt(message=HTML('<ansigrey>by the way </ansigrey><ansiblue>> </ansiblue>'),
+                                      history=FileHistory('.history'),
+                                      completer=completer,
+                                      bottom_toolbar=HTML(
+                                        '<style bg="#444444" fg="#ffffff">'
+                                        'Input \'/quit\' to quit btw'
+                                        '</style>'))
+                if user_request != None and user_request != "/quit":
+                    by_the_way(messages=messages, btw_request=user_request)
+                print("\033[32m/btw quit.\033[0m")
                 user_request = prompt(message=HTML('<ansiblue>> </ansiblue>'),
                                       history=FileHistory('.history'),
                                       completer=completer)
@@ -105,6 +122,11 @@ if __name__ == "__main__":
                 filepath = os.path.join("history", f"chat_{filename}.json")
                 messages = [{"role":"system", "content":SYSTEM_PROMPT_TEMPLATE.format(user_image=provide_user_image())}]
                 user_request = prompt(message=HTML('<ansigreen>what can I do 4 u? > </ansigreen>'),
+                                      history=FileHistory('.history'),
+                                      completer=completer)
+                continue
+            elif user_request is None or (isinstance(user_request, str) and user_request.strip() == ""):
+                user_request = prompt(message=HTML('<ansiblue>> </ansiblue>'),
                                       history=FileHistory('.history'),
                                       completer=completer)
                 continue
